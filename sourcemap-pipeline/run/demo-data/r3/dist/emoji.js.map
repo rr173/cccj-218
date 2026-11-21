@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "sources": [
+    "src/emoji.ts"
+  ],
+  "names": [],
+  "mappings": "AAAA,CAAC,CAAC,CAAC,EAAC"
+}

@@ -1,0 +1,24 @@
+{
+  "release_id": "R3",
+  "artifacts": [
+    {
+      "artifact_id": "art-emoji",
+      "sha256": "50fae5cbfc521605c59c659746c5e9efb2e699a87b1bc906bea2ca9709d77050",
+      "path": "dist/emoji.js",
+      "url_aliases": [
+        "https://example.com/static/emoji.js"
+      ],
+      "source_map": {
+        "path": "dist/emoji.js.map",
+        "sha256": "302d715ea70ac63224da8e1bc68e257fee772aee6d03d1c364077d18981cd7fc"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source_identity": "src/emoji.ts",
+      "sha256": "f59224cd774c382ad6e57241d767433b223c7dc0198a84e4ee264c3270e9535e",
+      "path": "src/emoji.ts"
+    }
+  ]
+}

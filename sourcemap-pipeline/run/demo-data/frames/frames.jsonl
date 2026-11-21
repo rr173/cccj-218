@@ -1,0 +1,13 @@
+{"event_id": "E1", "frame_index": 0, "release_id": "R1", "url": "https://example.com/static/bundle.js", "line": 1, "column": 1, "column_unit": "utf16", "error_type": "TypeError"}
+{"event_id": "E1", "frame_index": 1, "release_id": "R1", "url": "https://example.com/static/bundle.js", "line": 1, "column": 9, "column_unit": "utf16", "error_type": "TypeError"}
+{"event_id": "E1", "frame_index": 2, "release_id": "R1", "url": "https://example.com/static/bundle.js", "line": 1, "column": 2, "column_unit": "utf16", "error_type": "TypeError"}
+{"event_id": "E2", "frame_index": 0, "release_id": "R1", "url": "https://example.com/static/bundle.js", "line": 1, "column": 3, "column_unit": "utf16", "error_type": "TypeError"}
+{"event_id": "E3", "frame_index": 0, "release_id": "R2", "url": "https://example.com/static/bundle.js", "line": 1, "column": 9, "column_unit": "utf16", "error_type": "RangeError"}
+{"event_id": "E4", "frame_index": 0, "release_id": "R1", "url": "https://example.com/static/bundle.js", "line": 1, "column": 9, "column_unit": "utf16", "error_type": "RangeError"}
+{"event_id": "E5", "frame_index": 0, "release_id": "R3", "url": "https://example.com/static/emoji.js", "line": 1, "column": 6, "column_unit": "utf16", "error_type": "Error"}
+{"event_id": "E5", "frame_index": 1, "release_id": "R3", "url": "https://example.com/static/emoji.js", "line": 1, "column": 5, "column_unit": "codepoint", "error_type": "Error"}
+{"event_id": "E6", "frame_index": 0, "release_id": "R3", "url": "https://example.com/static/emoji.js", "line": 1, "column": 5, "column_unit": "utf16", "error_type": "Error"}
+{"event_id": "E7", "frame_index": 0, "release_id": "R4", "url": "https://example.com/static/sec.js", "line": 1, "column": 4, "column_unit": "utf16", "error_type": "SyntaxError"}
+{"event_id": "E7", "frame_index": 1, "release_id": "R4", "url": "https://example.com/static/sec.js", "line": 2, "column": 1, "column_unit": "utf16", "error_type": "SyntaxError"}
+{"event_id": "E7", "frame_index": 2, "release_id": "R4", "url": "https://example.com/static/sec.js", "line": 3, "column": 1, "column_unit": "utf16", "error_type": "SyntaxError"}
+{"event_id": "E8", "frame_index": 0, "release_id": "R1", "url": "https://example.com/static/never-heard-of.js", "line": 1, "column": 1, "column_unit": "utf16", "error_type": "Error"}

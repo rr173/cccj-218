@@ -1,0 +1,1 @@
+{"release_id": "BAD-MISS-BIND", "artifacts": [{"artifact_id": "d", "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881", "path": "d.js", "url_aliases": ["u://d.js"], "source_map": {"path": "d.map", "sha256": "d29fdc823a5e99a0945fc108aaaa86de33c6580aad3b62be483a668efb986205"}}]}

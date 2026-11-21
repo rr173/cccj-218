@@ -1,0 +1,1 @@
+    function fn(n) { return n + 1; }

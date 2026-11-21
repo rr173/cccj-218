@@ -1,0 +1,36 @@
+{
+  "artifacts": 2,
+  "bindings": 1,
+  "maps_indexed": 2,
+  "maps_rejected": {},
+  "release_id": "R1",
+  "segments_total": 4,
+  "sources_pinned": 1
+}
+{
+  "artifacts": 1,
+  "bindings": 0,
+  "maps_indexed": 1,
+  "maps_rejected": {},
+  "release_id": "R2",
+  "segments_total": 2,
+  "sources_pinned": 1
+}
+{
+  "artifacts": 1,
+  "bindings": 0,
+  "maps_indexed": 1,
+  "maps_rejected": {},
+  "release_id": "R3",
+  "segments_total": 5,
+  "sources_pinned": 1
+}
+{
+  "artifacts": 1,
+  "bindings": 0,
+  "maps_indexed": 1,
+  "maps_rejected": {},
+  "release_id": "R4",
+  "segments_total": 3,
+  "sources_pinned": 1
+}

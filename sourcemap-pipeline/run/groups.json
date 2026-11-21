@@ -1,0 +1,187 @@
+{
+  "group_count": 10,
+  "groups": [
+    {
+      "event_count": 1,
+      "events": [
+        "E6"
+      ],
+      "example_event": "E6",
+      "frame_count": 1,
+      "group_key": {
+        "artifact_digest": "50fae5cbfc521605c59c659746c5e9efb2e699a87b1bc906bea2ca9709d77050",
+        "artifact_id": "art-emoji",
+        "error_type": "Error",
+        "generated_column_one_based": 5,
+        "generated_line_one_based": 1,
+        "kind": "invalid_frame",
+        "reason": "inside_surrogate_pair",
+        "release_id": "R3",
+        "url": "https://example.com/static/emoji.js"
+      }
+    },
+    {
+      "event_count": 1,
+      "events": [
+        "E3"
+      ],
+      "example_event": "E3",
+      "frame_count": 1,
+      "group_key": {
+        "artifact_digest": "6329d6953140af2ad19c02af79fce80cbbd41e5eb6c602e99326ad31231f9123",
+        "artifact_id": "art-bundle-r2",
+        "error_type": "RangeError",
+        "generated_column_one_based": 9,
+        "generated_line_one_based": 1,
+        "kind": "unmapped",
+        "reason": "segment_without_original_position",
+        "release_id": "R2",
+        "url": "https://example.com/static/bundle.js"
+      }
+    },
+    {
+      "event_count": 1,
+      "events": [
+        "E4"
+      ],
+      "example_event": "E4",
+      "frame_count": 1,
+      "group_key": {
+        "artifact_digest": "ef6d7cd3c97ead7f36a0556adaa2037be58e661a969013b981843b59b8d9e993",
+        "artifact_id": "art-bundle-r1",
+        "error_type": "RangeError",
+        "generated_column_one_based": 9,
+        "generated_line_one_based": 1,
+        "kind": "unmapped",
+        "reason": "segment_without_original_position",
+        "release_id": "R1",
+        "url": "https://example.com/static/bundle.js"
+      }
+    },
+    {
+      "event_count": 1,
+      "events": [
+        "E1"
+      ],
+      "example_event": "E1",
+      "frame_count": 1,
+      "group_key": {
+        "artifact_digest": "ef6d7cd3c97ead7f36a0556adaa2037be58e661a969013b981843b59b8d9e993",
+        "artifact_id": "art-bundle-r1",
+        "error_type": "TypeError",
+        "generated_column_one_based": 9,
+        "generated_line_one_based": 1,
+        "kind": "unmapped",
+        "reason": "segment_without_original_position",
+        "release_id": "R1",
+        "url": "https://example.com/static/bundle.js"
+      }
+    },
+    {
+      "event_count": 1,
+      "events": [
+        "E8"
+      ],
+      "example_event": "E8",
+      "frame_count": 1,
+      "group_key": {
+        "artifact_digest": null,
+        "artifact_id": null,
+        "error_type": "Error",
+        "generated_column_one_based": 1,
+        "generated_line_one_based": 1,
+        "kind": "missing_artifact",
+        "reason": "url_not_bound_in_release",
+        "release_id": "R1",
+        "url": "https://example.com/static/never-heard-of.js"
+      }
+    },
+    {
+      "event_count": 1,
+      "events": [
+        "E7"
+      ],
+      "example_event": "E7",
+      "frame_count": 1,
+      "group_key": {
+        "column_zero_based": 0,
+        "error_type": "SyntaxError",
+        "kind": "mapped",
+        "line_zero_based": 0,
+        "release_id": "R4",
+        "source_body_digest": "51b90189809939a2d2b72f4a1f0b3b41923ed407a311c5d17316531ffb36a0c3",
+        "source_identity": "src/sec.ts"
+      }
+    },
+    {
+      "event_count": 1,
+      "events": [
+        "E7"
+      ],
+      "example_event": "E7",
+      "frame_count": 1,
+      "group_key": {
+        "column_zero_based": 0,
+        "error_type": "SyntaxError",
+        "kind": "mapped",
+        "line_zero_based": 1,
+        "release_id": "R4",
+        "source_body_digest": "51b90189809939a2d2b72f4a1f0b3b41923ed407a311c5d17316531ffb36a0c3",
+        "source_identity": "src/sec.ts"
+      }
+    },
+    {
+      "event_count": 1,
+      "events": [
+        "E7"
+      ],
+      "example_event": "E7",
+      "frame_count": 1,
+      "group_key": {
+        "column_zero_based": 0,
+        "error_type": "SyntaxError",
+        "kind": "mapped",
+        "line_zero_based": 2,
+        "release_id": "R4",
+        "source_body_digest": "51b90189809939a2d2b72f4a1f0b3b41923ed407a311c5d17316531ffb36a0c3",
+        "source_identity": "src/sec.ts"
+      }
+    },
+    {
+      "event_count": 2,
+      "events": [
+        "E1",
+        "E2"
+      ],
+      "example_event": "E1",
+      "frame_count": 3,
+      "group_key": {
+        "column_zero_based": 1,
+        "error_type": "TypeError",
+        "kind": "mapped",
+        "line_zero_based": 2,
+        "release_id": "R1",
+        "source_body_digest": "e87c45fd6a35616a2ffa057c7a87f1bb3ecd37d72dd966ab04f4fff75e4f6c93",
+        "source_identity": "src/app.ts"
+      }
+    },
+    {
+      "event_count": 1,
+      "events": [
+        "E5"
+      ],
+      "example_event": "E5",
+      "frame_count": 2,
+      "group_key": {
+        "column_zero_based": 4,
+        "error_type": "Error",
+        "kind": "mapped",
+        "line_zero_based": 0,
+        "release_id": "R3",
+        "source_body_digest": "f59224cd774c382ad6e57241d767433b223c7dc0198a84e4ee264c3270e9535e",
+        "source_identity": "src/emoji.ts"
+      }
+    }
+  ],
+  "total_events": 8
+}

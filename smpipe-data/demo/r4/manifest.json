@@ -1,0 +1,24 @@
+{
+  "release_id": "R4",
+  "artifacts": [
+    {
+      "artifact_id": "art-sec",
+      "sha256": "dd07f3c4215c322b4a391e3c3fae8030c6fcc6813299875f0676ae8cf7a7a9dd",
+      "path": "dist/sec.js",
+      "url_aliases": [
+        "https://example.com/static/sec.js"
+      ],
+      "source_map": {
+        "path": "dist/sec.js.map",
+        "sha256": "fd8959ddfb6dc8116becc17aa47edab6e6980f560715084815cbf6f10be73279"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source_identity": "src/sec.ts",
+      "sha256": "51b90189809939a2d2b72f4a1f0b3b41923ed407a311c5d17316531ffb36a0c3",
+      "path": "src/sec.ts"
+    }
+  ]
+}

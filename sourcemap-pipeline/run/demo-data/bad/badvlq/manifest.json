@@ -1,0 +1,1 @@
+{"release_id": "BAD-VLQ", "artifacts": [{"artifact_id": "a", "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881", "path": "a.js", "url_aliases": ["u://a.js"], "source_map": {"path": "a.js.map", "sha256": "225c87631f18cb9e99fe73491ee2327c627625db40c6b9ce743d444f08e340b5"}}]}

@@ -1,0 +1,11 @@
+{
+  "blob_reads": 10,
+  "line_cache_hits": 0,
+  "line_cache_misses": 0,
+  "line_index_cache_hits": 8,
+  "line_loads": 7,
+  "names_cache_hits": 5,
+  "segment_lookup_queries": 14,
+  "segment_rows_inspected": 17,
+  "text_cache_hits": 5
+}

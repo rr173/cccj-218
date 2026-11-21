@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": [
+    "src/intermediate.js"
+  ],
+  "names": [
+    "fn"
+  ],
+  "mappings": "AAAIA,Q"
+}

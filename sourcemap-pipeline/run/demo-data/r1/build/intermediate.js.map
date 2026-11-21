@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "sources": [
+    "src/app.ts"
+  ],
+  "names": [
+    "fn"
+  ],
+  "mappings": "A,IAECA",
+  "sourcesContent": [
+    "// application\nconst label = 'demo';\nfunction fn(n: number): number {\n  return n + 1;\n}"
+  ]
+}

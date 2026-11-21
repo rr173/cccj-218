@@ -1,0 +1,28 @@
+{
+  "root": "/workspace/smpipe-data/demo",
+  "manifests": {
+    "R1": "/workspace/smpipe-data/demo/r1/manifest.json",
+    "R2": "/workspace/smpipe-data/demo/r2/manifest.json",
+    "R3": "/workspace/smpipe-data/demo/r3/manifest.json",
+    "R4": "/workspace/smpipe-data/demo/r4/manifest.json"
+  },
+  "bad": {
+    "bad_vlq": "/workspace/smpipe-data/demo/bad/badvlq/manifest.json",
+    "external_section": "/workspace/smpipe-data/demo/bad/extsection/manifest.json",
+    "cycle": "/workspace/smpipe-data/demo/bad/cycle/manifest.json",
+    "mismatch_manifest": "/workspace/smpipe-data/demo/bad/mismatch/manifest.json",
+    "mismatch_real_digest": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5",
+    "missing_binding": "/workspace/smpipe-data/demo/bad/missbind/manifest.json",
+    "section_overlap": "/workspace/smpipe-data/demo/bad/overlap/manifest.json"
+  },
+  "frames": "/workspace/smpipe-data/demo/frames/frames.jsonl",
+  "digests": {
+    "r1_bundle": "ef6d7cd3c97ead7f36a0556adaa2037be58e661a969013b981843b59b8d9e993",
+    "r1_compress_map": "053c06cf62c24cf829a5d9e569c88816c2bfba3a1bd99a83273a7e8020fe29ff",
+    "r1_app_ts": "e87c45fd6a35616a2ffa057c7a87f1bb3ecd37d72dd966ab04f4fff75e4f6c93",
+    "r2_bundle": "6329d6953140af2ad19c02af79fce80cbbd41e5eb6c602e99326ad31231f9123",
+    "r2_map": "e967bdecb37ef43ea3e8fc5b5ba897067190861ae09f517997119548a9bbfa77",
+    "r3_bundle": "50fae5cbfc521605c59c659746c5e9efb2e699a87b1bc906bea2ca9709d77050",
+    "r4_bundle": "dd07f3c4215c322b4a391e3c3fae8030c6fcc6813299875f0676ae8cf7a7a9dd"
+  }
+}

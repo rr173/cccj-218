@@ -1,0 +1,24 @@
+{
+  "release_id": "R2",
+  "artifacts": [
+    {
+      "artifact_id": "art-bundle-r2",
+      "sha256": "6329d6953140af2ad19c02af79fce80cbbd41e5eb6c602e99326ad31231f9123",
+      "path": "dist/bundle2.js",
+      "url_aliases": [
+        "https://example.com/static/bundle.js"
+      ],
+      "source_map": {
+        "path": "dist/bundle2.js.map",
+        "sha256": "e967bdecb37ef43ea3e8fc5b5ba897067190861ae09f517997119548a9bbfa77"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source_identity": "src/other.js",
+      "sha256": "6cecf60b3ea8d64cea1e49c6210ad0fc421a5cbb966ddfb2cb9a0ae0dc26f610",
+      "path": "src/other.js"
+    }
+  ]
+}

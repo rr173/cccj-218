@@ -1,0 +1,1 @@
+{"release_id": "BAD-OVERLAP", "artifacts": [{"artifact_id": "e", "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881", "path": "e.js", "url_aliases": ["u://e.js"], "source_map": {"path": "e.map", "sha256": "f1f7af0e86c63ff5c1ea1f270d7889f4178c1956f9b53062561e9e568922358d"}}]}

@@ -1,0 +1,39 @@
+{
+  "release_id": "R1",
+  "artifacts": [
+    {
+      "artifact_id": "art-bundle-r1",
+      "sha256": "ef6d7cd3c97ead7f36a0556adaa2037be58e661a969013b981843b59b8d9e993",
+      "path": "dist/bundle1.js",
+      "url_aliases": [
+        "https://example.com/static/bundle.js"
+      ],
+      "source_map": {
+        "path": "dist/bundle1.js.map",
+        "sha256": "053c06cf62c24cf829a5d9e569c88816c2bfba3a1bd99a83273a7e8020fe29ff"
+      },
+      "source_bindings": [
+        {
+          "source_identity": "src/intermediate.js",
+          "next_artifact_id": "art-intermediate-r1"
+        }
+      ]
+    },
+    {
+      "artifact_id": "art-intermediate-r1",
+      "sha256": "4ffeb63ae048a00158dd15fe7dab9511559dc7e8b822a69ba7c8a0fb6aac526d",
+      "path": "build/intermediate.js",
+      "source_map": {
+        "path": "build/intermediate.js.map",
+        "sha256": "bb2f6e0ab458f3267c10443c0e2350feb5decf0688dfc7b56517ea7165637887"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source_identity": "src/app.ts",
+      "sha256": "e87c45fd6a35616a2ffa057c7a87f1bb3ecd37d72dd966ab04f4fff75e4f6c93",
+      "path": "src/app.ts"
+    }
+  ]
+}

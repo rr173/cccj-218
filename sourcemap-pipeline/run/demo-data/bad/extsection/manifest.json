@@ -1,0 +1,1 @@
+{"release_id": "BAD-SECTION", "artifacts": [{"artifact_id": "b", "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881", "path": "b.js", "url_aliases": ["u://b.js"], "source_map": {"path": "b.js.map", "sha256": "0e344e579c3128b02a491996a85ddec5f008f8cdb7c266f8ada89937d7b2438f"}}]}

@@ -1,0 +1,37 @@
+{
+  "version": 3,
+  "sections": [
+    {
+      "offset": {
+        "line": 0,
+        "column": 3
+      },
+      "map": {
+        "version": 3,
+        "sources": [
+          "src/sec.ts"
+        ],
+        "names": [
+          "alpha"
+        ],
+        "mappings": "AAAAA;AACA"
+      }
+    },
+    {
+      "offset": {
+        "line": 2,
+        "column": 0
+      },
+      "map": {
+        "version": 3,
+        "sources": [
+          "src/sec.ts"
+        ],
+        "names": [
+          "beta"
+        ],
+        "mappings": "AAEAA"
+      }
+    }
+  ]
+}
