@@ -1,6 +1,9 @@
 """Command line interface: ingest-build / enrich / explain-frame / groups.
 
 All commands work against a local on-disk store and never touch the network.
+The exposure first-error fact table adds ``import-facts`` / ``export-facts``
+(plus ``facts-metrics``) backed by a separate working SQLite database that
+reads a sealed enrichment database strictly read-only.
 """
 
 from __future__ import annotations
@@ -10,6 +13,7 @@ import json
 import sys
 
 from .errors import SmPipeError
+from .facts import FactStore
 from .pipeline import (
     compute_groups,
     enrich_frame,
@@ -63,11 +67,103 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_reset = sub.add_parser("reset-metrics", help="zero the access counters")
     p_reset.add_argument("--store", required=True)
+
+    p_import_facts = sub.add_parser(
+        "import-facts",
+        help="import one telemetry change batch into the exposure fact "
+             "working database",
+    )
+    p_import_facts.add_argument("--work-db", required=True)
+    p_import_facts.add_argument(
+        "--enrich-db",
+        help="sealed enrichment SQLite database (required when creating the "
+             "working database)",
+    )
+    p_import_facts.add_argument("--batch", required=True)
+
+    p_export_facts = sub.add_parser(
+        "export-facts",
+        help="export the current exposure first-error facts as JSONL",
+    )
+    p_export_facts.add_argument("--work-db", required=True)
+    p_export_facts.add_argument(
+        "--enrich-db",
+        help="optional sealed enrichment database to rebind after reopening",
+    )
+    p_export_facts.add_argument("--out", help="optional JSONL output path")
+
+    p_fact_metrics = sub.add_parser(
+        "facts-metrics",
+        help="dump fact-store access/maintenance counters and query plans",
+    )
+    p_fact_metrics.add_argument("--work-db", required=True)
+    p_fact_metrics.add_argument(
+        "--enrich-db",
+        help="optional sealed enrichment database to rebind after reopening",
+    )
+    p_fact_metrics.add_argument(
+        "--plan-event", help="event_id for an enrichment frame query plan"
+    )
+    p_fact_metrics.add_argument(
+        "--plan-release", help="release_id paired with --plan-event"
+    )
     return parser
+
+
+def _run_facts(args: argparse.Namespace) -> int:
+    if args.command == "import-facts":
+        with open(args.batch, "rb") as handle:
+            raw = handle.read()
+        facts = FactStore(args.work_db, enrich_path=args.enrich_db)
+        try:
+            _print(facts.import_batch(raw))
+        finally:
+            facts.close()
+        return 0
+
+    facts = FactStore(args.work_db, enrich_path=args.enrich_db)
+    try:
+        if args.command == "export-facts":
+            rows = facts.export_facts()
+            if args.out:
+                with open(args.out, "w", encoding="utf-8") as handle:
+                    for row in rows:
+                        handle.write(
+                            json.dumps(row, ensure_ascii=False,
+                                       sort_keys=True) + "\n"
+                        )
+            else:
+                for row in rows:
+                    sys.stdout.write(
+                        json.dumps(row, ensure_ascii=False,
+                                   sort_keys=True) + "\n"
+                    )
+            _print({"fact_rows": len(rows), "out": args.out or "stdout"})
+        elif args.command == "facts-metrics":
+            payload = {
+                "last_seq": facts.last_seq(),
+                "metrics": facts.metrics_snapshot(),
+            }
+            if args.plan_event and args.plan_release:
+                payload["enrich_frame_query_plan"] = facts.explain_enrich_plan(
+                    args.plan_event, args.plan_release
+                )
+            _print(payload)
+    finally:
+        facts.close()
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command in ("import-facts", "export-facts", "facts-metrics"):
+        try:
+            return _run_facts(args)
+        except SmPipeError as exc:
+            print(f"{exc.reason}: {exc}", file=sys.stderr)
+            return 2
+
+    store = None
     try:
         store = Store(args.store)
         if args.command == "ingest-build":
@@ -117,10 +213,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{exc.reason}: {exc}", file=sys.stderr)
         return 2
     finally:
-        try:
+        if store is not None:
             store.close()
-        except Exception:  # pragma: no cover
-            pass
 
 
 if __name__ == "__main__":

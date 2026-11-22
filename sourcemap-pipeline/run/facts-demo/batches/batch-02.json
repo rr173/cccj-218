@@ -1,0 +1,1 @@
+{"event_changes": [], "exposure_changes": [{"exposure_id": "X3", "release_id": "R3", "session_id": "sess-A", "start_ms": 150}, {"exposure_id": "X2", "release_id": "R2", "session_id": "sess-A", "start_ms": 300}], "seq": 2}

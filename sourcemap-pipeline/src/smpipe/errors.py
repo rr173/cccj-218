@@ -84,3 +84,21 @@ class MissingArtifact(SmPipeError):
 
 class BindingCycle(SmPipeError):
     reason = "cycle"
+
+
+class BatchError(SmPipeError):
+    """A telemetry change batch is malformed or conflicts with final state."""
+
+    reason = "invalid_batch"
+
+
+class BatchSequenceError(SmPipeError):
+    """Batch seq is stale, skips a number, or reuses a seq with new bytes."""
+
+    reason = "batch_sequence"
+
+
+class EnrichDatabaseError(SmPipeError):
+    """The sealed enrichment database is missing, changed or unreadable."""
+
+    reason = "enrich_database_error"

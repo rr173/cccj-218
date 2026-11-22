@@ -1,0 +1,64 @@
+== build sealed enrichment database ==
+== batch 1: two adjacent exposures, boundary event ==
+  ok  X1 first event: 'evt-alpha'
+  ok  X1 frame index (smallest mapped): 1
+  ok  X1 hand delay 130-100: 30
+  ok  X1 end is X2 start: 200
+  ok  boundary event belongs to X2: 'evt-beta'
+  ok  X2 delay at exact start: 0
+  ok  event without exposure stays unmatched (no fact row): False
+== batch 2: insert R3 exposure; old first error must vanish ==
+  ok  X1 interval shrinks: (100, 150)
+  ok  X1 keeps its own first error: 'evt-alpha'
+  ok  X3 has no R3-mapped event yet: None
+  ok  evt-beta not leaked to previous exposure: None
+== batch 3: same-millisecond tie, multi-frame smallest index ==
+  ok  same-ms tie resolved by event_id string: 'evt-beta'
+  ok  its only frame: 0
+  ok  X3 still empty (gamma is R3 but at 300, outside [150,300)): None
+== batch 4: retract the first error; backup takes over ==
+  ok  retracted first error cleared: 'evt-duo'
+  ok  backup frame is duo's R2 frame index: 1
+  ok  backup hand delay 300-300: 0
+== batch 5: move gamma into X3; backup takeover with delay ==
+  ok  X3 first error is gamma: 'evt-gamma'
+  ok  smallest of two mapped frames: 0
+  ok  X3 hand delay 250-150: 100
+== batch 6: delete X3; adjacency rebuilds, its fact row vanishes ==
+  ok  X3 fact row removed: False
+  ok  X1 end jumps to X2 start again: 300
+  ok  gamma does not leak into R1 exposure: 'evt-alpha'
+== batch 7: legal same-batch swap of two start times ==
+  ok  swap applied: (300, 100)
+== batch 8: rejected batches leave no partial state ==
+  ok  duplicate-id batch rejected: 2
+  ok  timeline-conflict batch rejected: 2
+  ok  unknown-delete batch rejected: 2
+  ok  facts unchanged after rejected batches: '{"end_ms": 300, "exposure_id": "X2", "first_delay_ms": null, "first_event_id": null, "first_frame_index": null, "first_occurred_ms": null, "release_id": "R2", "session_id": "sess-A", "start_ms": 100}\n{"end_ms": null, "exposure_id": "X1", "first_delay_ms": 0, "first_event_id": "evt-duo", "first_frame_index": 0, "first_occurred_ms": 300, "release_id": "R1", "session_id": "sess-A", "start_ms": 300}\n'
+== batch 9: skipped seq rejected; then valid batch 8 ==
+  ok  seq gap rejected: 2
+  ok  unmapped-only event never becomes a first error: True
+== reopen: identical replay is a no-op, ledger rules persist ==
+  ok  identical replayed batch is noop: True
+  ok  last seq survives reopen: 8
+  ok  same seq different bytes rejected after reopen: 2
+== locality evidence: query plans + maintenance counters ==
+{
+  "enrich_frame_query_plan": "4 | 0 | 0 | SEARCH frames USING INDEX sqlite_autoindex_frames_1 (event_id=?)",
+  "last_seq": 8,
+  "metrics": {
+    "batches_imported": 8,
+    "fact_rows_deleted": 1,
+    "fact_rows_inserted": 3,
+    "fact_rows_unchanged": 4,
+    "fact_rows_updated": 8,
+    "frame_qualification_queries": 14
+  }
+}
+  ok  enrich frame lookup uses primary-key search: True
+
+All walkthrough checks passed. Artifacts:
+  /workspace/sourcemap-pipeline/run/facts-demo/batches
+  /workspace/sourcemap-pipeline/run/facts-demo/facts-work.db
+  /workspace/sourcemap-pipeline/run/facts-demo/facts.jsonl
+  /workspace/sourcemap-pipeline/run/facts-demo/sealed-enrich.db

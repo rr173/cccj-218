@@ -22,13 +22,17 @@ src/smpipe/
   sourcemap.py   v3 map 解析、sections 展平、sourceRoot、冲突/顺序校验
   store.py       可重开 SQLite 存储、段 B-tree、有界 LRU、访问计数
   pipeline.py    ingest-build / enrich / explain / groups 主逻辑
+  facts.py       曝光首错事实表：批次台账、局部增量维护、只读归源绑定
   cli.py         命令行入口
 tools/
   generate_fixtures.py  手写两层 map 等全部演练资料生成器
   stress_test.py        百万段 map + 五万重复帧压力测试与访问量记录
+  facts_walkthrough.py  曝光首错事实表端到端复跑演练（含参考实现对拍）
 tests/
   reference_decoder.py  独立风格的第二份 VLQ 解码器（仅测试交叉核对）
+  reference_facts.py    只保留最终输入、每次从零重算的事实表参考实现
   test_pipeline.py      42 条实际断言
+  test_facts.py         曝光首错事实表行为/增量/对拍/局部性断言
   run_tests.py          python -I 隔离模式测试入口
 ```
 
@@ -105,6 +109,85 @@ bash rebuild.sh
 * mapped 组：显式源码身份 + 源码正文摘要 + 最终零基行列 + 业务错误类别；
 * 未映射/失败组：release、原始 URL、`artifact_id` 与产物摘要、原始生成坐标，
   因此不同发布的同名 URL 不会混作一个问题。
+
+## 曝光首错事实表（`import-facts` / `export-facts`）
+
+灰度发布中同一浏览器会话可能先看到新版又被切回旧版。本功能在一个**独立的
+SQLite 工作库**里持续维护「每条曝光的第一条已归源错误」，归源依据只读一个
+已经封盘、永不再变的 `enrich` 归源库（只读 `frames`，不读构建目录、不重新
+归源、不写入归源库）。
+
+### 批次格式
+
+一批是一个 JSON 对象，`seq` 从 1 开始连续递增，包含两类变更，均支持整条
+写入（默认 `op` 可省略）或按 ID 撤回；所有时间都是非负整数毫秒：
+
+```json
+{
+  "seq": 3,
+  "exposure_changes": [
+    {"exposure_id": "EXP-7", "session_id": "sess-1",
+     "release_id": "R2", "start_ms": 1000},
+    {"exposure_id": "EXP-2", "op": "delete"}
+  ],
+  "event_changes": [
+    {"event_id": "E1", "session_id": "sess-1", "occurred_ms": 1250},
+    {"event_id": "E9", "op": "delete"}
+  ]
+}
+```
+
+事件定位可以先于所属曝光到达；匹配不到曝光或没有合格帧都不是坏输入。
+撤回事件定位不会删除归源库里的帧。
+
+### 规则要点
+
+* 曝光区间左闭右开 `[start_ms, 下一条 start_ms)`，事件恰在起点归属新曝光；
+  同会话起点时刻最终状态唯一，同批合法换位按最终状态生效，不会因中间态失败；
+* 事件只在某帧 `release_id` 等于曝光发布且 `status=mapped` 时合格，多帧取
+  最小 `frame_index`；不合格不回找前一条发布；
+* 每曝光取最小 `(occurred_ms, event_id)`（ID 按字符串比较），事实行含曝光、
+  会话、发布、生效/结束时刻、首错事件、帧索引、发生时刻与距开始毫秒数，
+  无首错时后四项为空；
+* 导入只重算局部受影响曝光，不扫描整库、不全量重建、不重写无关事实行；
+  定位/时间轴/事实/批次进度同一事务提交，坏批次不留部分变化；
+* 同序号同字节重放为空操作，同序号异内容或跳号拒绝，重开工作库规则不变。
+
+### 复跑步骤（从已有归源库开始）
+
+```bash
+cd sourcemap-pipeline
+
+# 0. 归源库需先封盘（checkpoint 掉 WAL），随后视为只读
+python3 -I -c "import sqlite3;c=sqlite3.connect('./run/store.db');\
+c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()"
+
+# 1. 导入第 1 批（首次需用 --enrich-db 绑定封盘归源库，记录其 SHA-256）
+python3 -I smpipe.py import-facts --work-db ./run/facts/work.db \
+  --enrich-db ./run/store.db --batch ./path/batch-1.json
+
+# 2. 继续补报/更正；重开后可不传 --enrich-db，复用已记录的绑定
+python3 -I smpipe.py import-facts --work-db ./run/facts/work.db \
+  --batch ./path/batch-2.json
+
+# 3. 以 JSONL 导出当前事实（按 session、start_ms 稳定排序）
+python3 -I smpipe.py export-facts --work-db ./run/facts/work.db \
+  --out ./run/facts/facts.jsonl
+
+# 4. 维护计数与查询计划（证明有界索引读、无全表扫描）
+python3 -I smpipe.py facts-metrics --work-db ./run/facts/work.db \
+  --plan-event E1 --plan-release R1
+```
+
+一键小型可复跑演练（自建迷你封盘归源库，覆盖边界事件、补插使首错因发布不
+匹配消失、撤回/移动与候补接任、同毫秒多候选、多帧最小索引、同批换位、整批
+拒绝、重开重送，并逐批与从零重算的参考实现对拍）：
+
+```bash
+python3 -I tools/facts_walkthrough.py --out ./run/facts-demo
+```
+
+生成的数据只落在 `run/` 下，不入库到 Git。
 
 ## 性能与内存（实测，见 `rebuild.sh` 输出）
 

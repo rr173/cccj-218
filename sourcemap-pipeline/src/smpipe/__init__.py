@@ -5,4 +5,5 @@ All artefacts, source maps and source bodies are taken from a local build
 manifest and stored in a re-openable on-disk store.
 """
 
-__all__ = ["errors", "vlq", "columns", "sourcemap", "store", "pipeline"]
+__all__ = ["errors", "vlq", "columns", "sourcemap", "store", "pipeline",
+           "facts"]
