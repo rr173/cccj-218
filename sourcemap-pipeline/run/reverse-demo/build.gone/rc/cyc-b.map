@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "midc.js",
+    "src/final.ts"
+  ],
+  "names": [],
+  "mappings": "AAAA,UCAO"
+}

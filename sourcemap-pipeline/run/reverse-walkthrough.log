@@ -1,0 +1,62 @@
+== [1/6] write hand-written build material ==
+  releases: RA, RB, RC, RD
+== [2/6] ingest-build every release ==
+  RA: {"artifacts": 5, "bindings": 4, "maps_indexed": 4, "maps_rejected": {"4d21a022239ff356fc497fb6c91a363f48b6a55f83766b31a88474a1a4380797": "bad_vlq"}, "release_id": "RA", "segments_total": 14, "sources_pinned": 1}
+  RB: {"artifacts": 2, "bindings": 1, "maps_indexed": 2, "maps_rejected": {}, "release_id": "RB", "segments_total": 2, "sources_pinned": 0}
+  RC: {"artifacts": 3, "bindings": 3, "maps_indexed": 3, "maps_rejected": {}, "release_id": "RC", "segments_total": 4, "sources_pinned": 0}
+  RD: {"artifacts": 3, "bindings": 1, "maps_indexed": 3, "maps_rejected": {}, "release_id": "RD", "segments_total": 4004, "sources_pinned": 0}
+== [3/6] build-reverse-index from the sealed database ==
+  build report:
+    build_db_sha256: 9db0c8abb380ab34a565a95fafb35cf51f1fa5bc9f342bacb2eca47d2a9d4477
+    build_seconds: 0.508
+    entries_skipped_invalid_map: 0
+    entries_skipped_no_body: 0
+    entries_skipped_no_map: 0
+    entries_total: 7
+    entry_lines_scanned: 9
+    entry_segments_generated_only: 3
+    entry_segments_mapped: 4014
+    generated_columns_indexed: 1504020
+    hit_rows: 13
+    hop_cache_rejected_path: 2
+    hop_cycles: 1
+    hop_invalid_map: 1
+    hop_layer_limits: 0
+    hop_missing_artifact: 0
+    hop_points_computed: 9
+    hop_points_reused: 4000
+    hop_unmapped: 1
+    index: /workspace/sourcemap-pipeline/run/reverse-demo/reverse.idx
+    terminal_at_entry: 5
+== [4/6] semantic checks on small releases ==
+  ok  emoji line runs for src/orig.ts (0,10)
+  ok  end == point -> empty
+  ok  converging entries for src/orig.ts (0,10)
+  ok  intermediate without alias is not an entry
+  ok  valid branches survive broken ones
+  ok  missing source body still hits
+  ok  cycle outcome depends on the entry path
+  ok  unknown source -> empty
+  ok  range spanning lines compares coordinate pairs
+  ok  range ((0, 1), (0, 1)) rejected
+  ok  range ((1, 0), (0, 5)) rejected
+  ok  range ((0, 5), (0, 5)) rejected
+== [5/6] independent per-character reference + scale proof ==
+  ok  index == per-character reference (RA/RB/RC)
+  ok  hop points computed stays tiny
+  ok  shared intermediate point reused
+  ok  path-dependent cache entries rejected, never reused
+  ok  cycle outcomes never cached
+  ok  columns indexed via intervals, not per char
+  ok  hit rows stay interval-sized
+  counters: {"entry_lines_scanned": 9, "entry_segments_generated_only": 3, "entry_segments_mapped": 4014, "generated_columns_indexed": 1504020, "hop_cache_rejected_path": 2, "hop_cycles": 1, "hop_invalid_map": 1, "hop_layer_limits": 0, "hop_missing_artifact": 0, "hop_points_computed": 9, "hop_points_reused": 4000, "hop_unmapped": 1, "terminal_at_entry": 5}
+  query plan:
+    4 | 0 | 0 | SEARCH hits USING INDEX idx_hits_source (source_identity=? AND src_line>? AND src_line<?)
+    36 | 0 | 0 | USE TEMP B-TREE FOR ORDER BY
+  ok  long line + fan-in runs
+== [6/6] move the build database away, query the index alone ==
+  ok  identical results with only the index file
+  ok  index remembers the sealed build fingerprint
+  ok  index state complete
+
+All reverse-index walkthrough checks passed.

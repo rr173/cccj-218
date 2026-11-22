@@ -1,0 +1,32 @@
+{
+  "release_id": "RB",
+  "artifacts": [
+    {
+      "artifact_id": "rb-bundle.js",
+      "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "path": "rb-bundle.js",
+      "url_aliases": [
+        "https://example.com/rb.js"
+      ],
+      "source_map": {
+        "path": "rb-bundle.js.map",
+        "sha256": "90a0654a80ff059378a2e160e8ae6a7f6b1e5fa3e9ffeb8c5e4cdf61c59a0390"
+      },
+      "source_bindings": [
+        {
+          "source_identity": "rbmid.js",
+          "next_artifact_id": "art-rbmid"
+        }
+      ]
+    },
+    {
+      "artifact_id": "art-rbmid",
+      "sha256": "bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721",
+      "path": "art-rbmid",
+      "source_map": {
+        "path": "art-rbmid.map",
+        "sha256": "30d33dcc30a0eb8de0a8d1c4c37283b005005cdaa91ada1bf62aea2948edb3e4"
+      }
+    }
+  ]
+}

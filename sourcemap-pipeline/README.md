@@ -23,16 +23,19 @@ src/smpipe/
   store.py       可重开 SQLite 存储、段 B-tree、有界 LRU、访问计数
   pipeline.py    ingest-build / enrich / explain / groups 主逻辑
   facts.py       曝光首错事实表：批次台账、局部增量维护、只读归源绑定
+  reverse.py     源码区间反查索引：建索引 / 查索引（可重开、自包含）
   cli.py         命令行入口
 tools/
-  generate_fixtures.py  手写两层 map 等全部演练资料生成器
-  stress_test.py        百万段 map + 五万重复帧压力测试与访问量记录
-  facts_walkthrough.py  曝光首错事实表端到端复跑演练（含参考实现对拍）
+  generate_fixtures.py   手写两层 map 等全部演练资料生成器
+  stress_test.py         百万段 map + 五万重复帧压力测试与访问量记录
+  facts_walkthrough.py   曝光首错事实表端到端复跑演练（含参考实现对拍）
+  reverse_walkthrough.py 反查索引端到端复跑演练（含按字符枚举对拍）
 tests/
   reference_decoder.py  独立风格的第二份 VLQ 解码器（仅测试交叉核对）
   reference_facts.py    只保留最终输入、每次从零重算的事实表参考实现
   test_pipeline.py      42 条实际断言
   test_facts.py         曝光首错事实表行为/增量/对拍/局部性断言
+  test_reverse.py       反查索引行为/区间合并/循环差异/重开断言
   run_tests.py          python -I 隔离模式测试入口
 ```
 
@@ -185,6 +188,79 @@ python3 -I smpipe.py facts-metrics --work-db ./run/facts/work.db \
 
 ```bash
 python3 -I tools/facts_walkthrough.py --out ./run/facts-demo
+```
+
+生成的数据只落在 `run/` 下，不入库到 Git。
+
+## 源码区间反查索引（`build-reverse-index` / `query-reverse-index`）
+
+`enrich` 回答「这个生成坐标对应哪段源码」；反查索引回答相反的问题：
+拿到一份源码修复清单后，**所有已发布入口产物里有哪些生成区间**对应某段
+源码——哪怕那里至今没有报错。覆盖范围来自整批构建资料，与已有错误分组
+无关。
+
+* **入口**：每个登记过 URL 的 `(release_id, artifact_id)`；多个别名只算
+  一次，没有别名的中间产物不单独列出（但仍作为跳转目标被遍历）；
+* **索引对象**：生成正文里的真实字符起点（不含行尾之后、不含代理对后半
+  单元）；同一生成行上连续有效列且最终源码坐标相同就合成一个半开区间，
+  不跨空洞、不混不同源码点；
+* **归源语义与 `enrich` 完全一致**：入口行上相邻已入库段决定各自覆盖
+  （首段之前不归任何段，无原位置段同样截断前段）；后续层只查上层段给出
+  的固定原坐标，不加列差；沿用构建库展开后的段、同一发布的显式绑定、
+  相同的循环与 32 层上限判定。断链/无映射/循环分支只让自己无命中，不吞
+  同产物其他分支；最终源码正文缺失不影响精确坐标命中；
+* **区间计算，不按字符**：长压缩行只被少量映射段覆盖时，工作量按覆盖
+  区间与共享中间点增长；汇入同一中间坐标的一跳段匹配只解析一次（记忆化
+  携带链上签名集与层数，路径相关或超层数预算的结果绝不复用，循环结果
+  从不入缓存）；
+* **窄查询不扫全量**：命中表以 `(source_identity, src_line, src_col)`
+  建索引，查询只触达该源码在该行带内的行（`EXPLAIN QUERY PLAN` 可见
+  `SEARCH ... USING INDEX idx_hits_source`），不现场重走映射链。
+
+### 复跑步骤（从 `ingest-build` 到移走原库、重开反查）
+
+```bash
+cd sourcemap-pipeline
+
+# 1. 照常摄入构建资料（frames 不是必需的，不必先跑 enrich）
+python3 -I smpipe.py ingest-build --store ./run/store.db \
+  --manifest ./demo-data/r1/manifest.json
+
+# 2. 封盘（checkpoint 掉 WAL），随后构建库视为只读
+python3 -I -c "import sqlite3;c=sqlite3.connect('./run/store.db');\
+c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()"
+
+# 3. 从封盘构建库建反查索引（只读读取，不读原构建目录）
+python3 -I smpipe.py build-reverse-index \
+  --store ./run/store.db --index ./run/reverse.idx
+
+# 4. 查询：精确 source_identity + 源码半开范围（零基行, 零基 UTF-16 列），
+#    起止按坐标对先后比较，可跨行；倒置或相等报错 invalid_source_range
+python3 -I smpipe.py query-reverse-index --index ./run/reverse.idx \
+  --source src/app.ts --start-line 2 --start-col 0 --end-line 2 --end-col 10
+
+# 5. 移走原库与构建目录后，只带索引文件重开反查，结果不变
+mv ./run/store.db ./run/store.db.gone
+python3 -I smpipe.py query-reverse-index --index ./run/reverse.idx \
+  --source src/app.ts --start-line 2 --start-col 0 --end-line 2 --end-col 10
+
+# 6. 需要查询计划/索引计数证据时加 --explain（写到 stderr）
+python3 -I smpipe.py query-reverse-index --index ./run/reverse.idx \
+  --source src/app.ts --start-line 2 --start-col 0 --end-line 2 --end-col 10 \
+  --explain
+```
+
+输出为 JSONL（按发布、产物 ID、生成行、起始列稳定排序），每行含发布、
+入口产物 ID 及摘要、生成行、生成起止列、最终源码身份及精确行列；范围内
+没有命中时输出为空。
+
+一键可复跑演练（手写小构建资料：emoji 行区间合并、多入口汇合、跨发布
+绑定、别名去重、入口不同导致的循环差异、断链/无映射分支隔离、缺正文仍
+命中；另加运行时生成的 200 万列长行与 4000 个共享中间点的入口段验证
+区间级工作量；并与按字符枚举的独立参考实现逐行对拍；最后移走原库重开）：
+
+```bash
+python3 -I tools/reverse_walkthrough.py --out ./run/reverse-demo
 ```
 
 生成的数据只落在 `run/` 下，不入库到 Git。

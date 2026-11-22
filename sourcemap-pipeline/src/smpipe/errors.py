@@ -102,3 +102,15 @@ class EnrichDatabaseError(SmPipeError):
     """The sealed enrichment database is missing, changed or unreadable."""
 
     reason = "enrich_database_error"
+
+
+class ReverseIndexError(SmPipeError):
+    """The sealed build database or the reverse index file is unusable."""
+
+    reason = "reverse_index_error"
+
+
+class InvalidSourceRange(SmPipeError):
+    """A source-range query whose start is not strictly before its end."""
+
+    reason = "invalid_source_range"

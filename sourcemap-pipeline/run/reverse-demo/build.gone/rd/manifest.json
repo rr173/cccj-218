@@ -1,0 +1,44 @@
+{
+  "release_id": "RD",
+  "artifacts": [
+    {
+      "artifact_id": "fanin.js",
+      "sha256": "2b274a02e43f28960e1c4611f35b502651874b49390ac4c16afb9117b2dbf133",
+      "path": "fanin.js",
+      "url_aliases": [
+        "https://example.com/fanin.js"
+      ],
+      "source_map": {
+        "path": "fanin.js.map",
+        "sha256": "fb4ad2bc4c2d4e991f7d3580f0424214f99f5c10020d943e2d7b66f77be4feb3"
+      },
+      "source_bindings": [
+        {
+          "source_identity": "sharedmid.js",
+          "next_artifact_id": "art-shared"
+        }
+      ]
+    },
+    {
+      "artifact_id": "long.js",
+      "sha256": "be8889d3b8893c11d290b8dcf682164c326a90e6998f6bddb25d9a3a02daf666",
+      "path": "long.js",
+      "url_aliases": [
+        "https://example.com/long.js"
+      ],
+      "source_map": {
+        "path": "long.js.map",
+        "sha256": "9177c62d249ee80b727ef1e11cffcdb857e880090bd0062d451f94728b2352ce"
+      }
+    },
+    {
+      "artifact_id": "art-shared",
+      "sha256": "4b179810791a19af3bfeafbdcf0aca274d9ac7d5f063b8e0b75189360c0cf3a3",
+      "path": "art-shared",
+      "source_map": {
+        "path": "art-shared.map",
+        "sha256": "b4c726d0a6d943466ca3b97ac351e46c7626cccdb1a6e7da5e63d2b4846a6090"
+      }
+    }
+  ]
+}

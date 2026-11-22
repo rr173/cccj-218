@@ -120,3 +120,56 @@ artifact。富化时对 `(artifact_id, map_digest)` 签名做 visited 检测，�
 不变。导出按 `(session_id, start_ms)` 稳定排序，直接读已物化的事实表，
 不从历史批次现场重建。
 
+## 9. 源码区间反查索引（区间计算 + 共享点复用）
+
+`enrich` 是「已知生成坐标找源码」；反查索引是「已知源码区间找全部生成
+区间」，面向至今没有报错的代码位置，因此覆盖清单只能来自整批构建资料，
+不能来自已有错误分组。
+
+### 9.1 两个库、自包含
+
+* **构建库（sealed）**：`ingest-build` 的产物，封盘后只读（`immutable=1`
+  打开、非空 `-wal` 拒绝）。反查只需要 `artifacts` / `url_aliases` /
+  `maps` / `map_sources` / `bindings` / `segments` / `blobs`，**不需要
+  `frames`**，也不读原构建目录；建索引时把整库 SHA-256 写进索引 `rev_meta`
+  作为来源指纹。
+* **索引库（新）**：`entries`（每个登记过 URL 的
+  `(release_id, artifact_id)` 一行，别名去重）与 `hits`（物化命中），
+  索引 `idx_hits_source(source_identity, src_line, src_col)`。建好后
+  `state=complete` 才接受查询；查询只带这一个文件即可重开。
+
+### 9.2 覆盖区间而不是逐字符归源
+
+入口行上相邻的已入库段决定各自覆盖：段 i 覆盖 `[col_i, col_{i+1})`，末段
+覆盖到行尾（按 UTF-16 行长截断），首段之前不归任何段，无原位置段同样
+截断前段——与 `lookup_segment` 的「同行走最近 ≤ 列」语义逐点等价。索引
+对象只是真实字符起点：不含行尾之后，不含代理对后半个单元（低代理位是
+空洞）。每段只做**一次**归源，覆盖区间内连续有效列且最终源码坐标相同
+就合成一段输出；空洞两侧、不同源码点之间绝不合并。200 万列的长行因此
+只产生常数次解析与常数行命中记录（演练计数器
+`generated_columns_indexed` vs `hit_rows` 为证）。
+
+### 9.3 一跳点记忆化与循环的路径相关性
+
+后续层只查上层段给出的固定原坐标，不加列差。大量入口段会汇入同一中间
+坐标，因此按 `(release, artifact, map, line, col)` 记忆化一跳点的解析
+结果。记忆项携带该链访问过的 `(artifact, map)` 签名集与消耗层数，复用
+前必须满足：签名集与当前路径的 visited 不相交、且剩余层数预算足够
+（`depth + layers_used <= 32`）。**循环与超层结果从不写入缓存**——它们
+依赖入口路径，不能当成通用结果；演练里 `cyc-a`（经共享中间点命中）与
+`cyc-b`（同一中间点但循环回自身）证明两条路径互不污染
+（`hop_cache_rejected_path` 计数可见拒绝重算）。
+
+### 9.4 命中语义与查询定位
+
+断链、无映射、坏 map、循环分支只让自己的覆盖列无命中，不吞同一产物的
+其他有效分支；最终源码正文缺失不影响精确坐标命中（索引根本不读源码
+正文）。查询按 `(source_identity, src_line, src_col)` 索引定位行带，
+起止为坐标对字典序的半开区间（可跨行；倒置或相等报
+`invalid_source_range`），不扫描其他源码的生成区间、不现场重走映射链；
+输出按 `(release_id, artifact_id, gen_line, gen_col_start)` 稳定排序，
+每行含发布、入口产物 ID 及摘要、生成行、生成起止列、最终源码身份及
+精确行列。演练用按字符枚举的独立参考实现对小发布逐行对拍，并用
+`EXPLAIN QUERY PLAN` 展示窄查询的 `SEARCH ... USING INDEX
+idx_hits_source` 访问形态。
+

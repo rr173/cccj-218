@@ -1,0 +1,84 @@
+{
+  "release_id": "RA",
+  "artifacts": [
+    {
+      "artifact_id": "app.min.js",
+      "sha256": "aca02b01dd15f963f24d71665c78350be672a87fb9ec2664020999b20313dc18",
+      "path": "app.min.js",
+      "url_aliases": [
+        "https://example.com/app.js",
+        "https://example.com/app.alias.js"
+      ],
+      "source_map": {
+        "path": "app.min.js.map",
+        "sha256": "14d609d564b7e6ebbd9387a2f117069985a9182c06ee6b4af43518e4996f328a"
+      },
+      "source_bindings": [
+        {
+          "source_identity": "badmap.js",
+          "next_artifact_id": "art-bad"
+        },
+        {
+          "source_identity": "gap.js",
+          "next_artifact_id": "art-gap"
+        },
+        {
+          "source_identity": "mid.js",
+          "next_artifact_id": "art-mid"
+        }
+      ]
+    },
+    {
+      "artifact_id": "app2.min.js",
+      "sha256": "4a60bf7d4bc1e485744cf7e8d0860524752fca1ce42331be7c439fd23043f151",
+      "path": "app2.min.js",
+      "url_aliases": [
+        "https://example.com/app2.js"
+      ],
+      "source_map": {
+        "path": "app2.min.js.map",
+        "sha256": "3533010b6ee790067f2fa4474ae767a33bbd2281ef0d7847e65a50833493b835"
+      },
+      "source_bindings": [
+        {
+          "source_identity": "mid.js",
+          "next_artifact_id": "art-mid"
+        }
+      ]
+    },
+    {
+      "artifact_id": "art-mid",
+      "sha256": "9f9f5111f7b27a781f1f1ddde5ebc2dd2b796bfc7365c9c28b548e564176929f",
+      "path": "art-mid",
+      "source_map": {
+        "path": "art-mid.map",
+        "sha256": "4247364c71fdf46a8653be2307b9c44b04a68eb49a8f277a6fbe8c351203522c"
+      }
+    },
+    {
+      "artifact_id": "art-gap",
+      "sha256": "3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282",
+      "path": "art-gap",
+      "source_map": {
+        "path": "art-gap.map",
+        "sha256": "c0e79a583ceabe3904db51410453889f1102750b0f3bb3a4038c3d30fc14e66d"
+      }
+    },
+    {
+      "artifact_id": "art-bad",
+      "sha256": "d5ce2b19fbda14a25deac948154722f33efd37b369a32be8f03ec2be8ef7d3a5",
+      "path": "art-bad",
+      "source_map": {
+        "path": "art-bad.map",
+        "sha256": "4d21a022239ff356fc497fb6c91a363f48b6a55f83766b31a88474a1a4380797"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source_identity": "src/orig.ts",
+      "sha256": "e27baefd82732438e97f73fa069f9d96c4a9e98217be1b51753f14e45e175e9c",
+      "path": "pin-src_orig.ts"
+    }
+  ]
+}

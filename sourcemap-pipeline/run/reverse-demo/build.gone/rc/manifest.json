@@ -1,0 +1,56 @@
+{
+  "release_id": "RC",
+  "artifacts": [
+    {
+      "artifact_id": "cyc-a",
+      "sha256": "50e721e49c013f00c62cf59f2163542a9d8df02464efeb615d31051b0fddc326",
+      "path": "cyc-a",
+      "url_aliases": [
+        "https://example.com/cyc-a.js"
+      ],
+      "source_map": {
+        "path": "cyc-a.map",
+        "sha256": "08e5cecfff40db4f9ce234e9fe34d0f52fa55005f386de1795e1a4a65359fa04"
+      },
+      "source_bindings": [
+        {
+          "source_identity": "midc.js",
+          "next_artifact_id": "art-cycmid"
+        }
+      ]
+    },
+    {
+      "artifact_id": "cyc-b",
+      "sha256": "4e3f5a1d81582cf9c45c5b0f43e59793f58d060cc71e7667b5b2a09e37f602a2",
+      "path": "cyc-b",
+      "url_aliases": [
+        "https://example.com/cyc-b.js"
+      ],
+      "source_map": {
+        "path": "cyc-b.map",
+        "sha256": "5c0d937aae1e982163ae217219564053c099ef5fa6a93a4036ceee1048c56147"
+      },
+      "source_bindings": [
+        {
+          "source_identity": "midc.js",
+          "next_artifact_id": "art-cycmid"
+        }
+      ]
+    },
+    {
+      "artifact_id": "art-cycmid",
+      "sha256": "ef90d9c1ec76b1edc9edfaf2c0c05359c10ccc49ae8ecf7b7fd25ce9c02e86a4",
+      "path": "art-cycmid",
+      "source_map": {
+        "path": "art-cycmid.map",
+        "sha256": "9e3722acaefbe7eb293269ab902efe7a68041f1112d5c5b994221b1df84f6c3d"
+      },
+      "source_bindings": [
+        {
+          "source_identity": "back.js",
+          "next_artifact_id": "cyc-b"
+        }
+      ]
+    }
+  ]
+}

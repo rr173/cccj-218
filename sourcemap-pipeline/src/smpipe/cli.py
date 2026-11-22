@@ -3,7 +3,10 @@
 All commands work against a local on-disk store and never touch the network.
 The exposure first-error fact table adds ``import-facts`` / ``export-facts``
 (plus ``facts-metrics``) backed by a separate working SQLite database that
-reads a sealed enrichment database strictly read-only.
+reads a sealed enrichment database strictly read-only.  The source-range
+reverse index adds ``build-reverse-index`` / ``query-reverse-index``: the
+builder reads a sealed build database read-only, and the query side needs
+only the self-contained index file.
 """
 
 from __future__ import annotations
@@ -20,6 +23,7 @@ from .pipeline import (
     ingest_frames,
     ingest_manifest,
 )
+from .reverse import ReverseIndex, ReverseIndexBuilder
 from .store import Store
 
 
@@ -107,6 +111,37 @@ def build_parser() -> argparse.ArgumentParser:
     p_fact_metrics.add_argument(
         "--plan-release", help="release_id paired with --plan-event"
     )
+
+    p_rev_build = sub.add_parser(
+        "build-reverse-index",
+        help="build the source-range reverse index from a sealed build "
+             "database (read-only; frames not required)",
+    )
+    p_rev_build.add_argument("--store", required=True,
+                             help="sealed build SQLite database")
+    p_rev_build.add_argument("--index", required=True,
+                             help="reverse index file to create")
+
+    p_rev_query = sub.add_parser(
+        "query-reverse-index",
+        help="find generated ranges for a source range (index file only)",
+    )
+    p_rev_query.add_argument("--index", required=True)
+    p_rev_query.add_argument("--source", required=True,
+                             help="exact source_identity from the index")
+    p_rev_query.add_argument("--start-line", required=True, type=int,
+                             help="zero-based start line (inclusive)")
+    p_rev_query.add_argument("--start-col", required=True, type=int,
+                             help="zero-based UTF-16 start column (inclusive)")
+    p_rev_query.add_argument("--end-line", required=True, type=int,
+                             help="zero-based end line (exclusive)")
+    p_rev_query.add_argument("--end-col", required=True, type=int,
+                             help="zero-based UTF-16 end column (exclusive)")
+    p_rev_query.add_argument("--out", help="optional JSONL output path")
+    p_rev_query.add_argument(
+        "--explain", action="store_true",
+        help="also print the query plan and index counters to stderr",
+    )
     return parser
 
 
@@ -154,11 +189,51 @@ def _run_facts(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_reverse(args: argparse.Namespace) -> int:
+    if args.command == "build-reverse-index":
+        with ReverseIndexBuilder(args.store, args.index) as builder:
+            report = builder.build()
+        _print(report)
+        return 0
+    start = (args.start_line, args.start_col)
+    end = (args.end_line, args.end_col)
+    with ReverseIndex(args.index) as index:
+        rows = index.query(args.source, start, end)
+        if args.out:
+            with open(args.out, "w", encoding="utf-8") as handle:
+                for row in rows:
+                    handle.write(
+                        json.dumps(row, ensure_ascii=False, sort_keys=True)
+                        + "\n"
+                    )
+        else:
+            for row in rows:
+                sys.stdout.write(
+                    json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n"
+                )
+        if args.explain:
+            payload = {
+                "rows": len(rows),
+                "query_plan": index.explain_plan(args.source, start, end),
+                "index": index.info(),
+            }
+            json.dump(payload, sys.stderr, ensure_ascii=False, indent=2,
+                      sort_keys=True)
+            sys.stderr.write("\n")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command in ("import-facts", "export-facts", "facts-metrics"):
         try:
             return _run_facts(args)
+        except SmPipeError as exc:
+            print(f"{exc.reason}: {exc}", file=sys.stderr)
+            return 2
+    if args.command in ("build-reverse-index", "query-reverse-index"):
+        try:
+            return _run_reverse(args)
         except SmPipeError as exc:
             print(f"{exc.reason}: {exc}", file=sys.stderr)
             return 2
