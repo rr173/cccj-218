@@ -114,3 +114,15 @@ class InvalidSourceRange(SmPipeError):
     """A source-range query whose start is not strictly before its end."""
 
     reason = "invalid_source_range"
+
+
+class TelemetryError(SmPipeError):
+    """An async-telemetry JSONL record is structurally malformed."""
+
+    reason = "invalid_telemetry"
+
+
+class LineageConflict(SmPipeError):
+    """Telemetry records disagree about a node, event binding or event id."""
+
+    reason = "lineage_input_conflict"

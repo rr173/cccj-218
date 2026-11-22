@@ -6,7 +6,10 @@ The exposure first-error fact table adds ``import-facts`` / ``export-facts``
 reads a sealed enrichment database strictly read-only.  The source-range
 reverse index adds ``build-reverse-index`` / ``query-reverse-index``: the
 builder reads a sealed build database read-only, and the query side needs
-only the self-contained index file.
+only the self-contained index file.  ``export-lineage`` joins a sealed
+enrichment database with unordered async telemetry into a per-event
+trigger-operation lineage table; the enrichment database stays immutable and
+all intermediate state is spooled in a throwaway scratch database.
 """
 
 from __future__ import annotations
@@ -17,9 +20,9 @@ import sys
 
 from .errors import SmPipeError
 from .facts import FactStore
+from .lineage import export_lineage
 from .pipeline import (
     compute_groups,
-    enrich_frame,
     ingest_frames,
     ingest_manifest,
 )
@@ -142,6 +145,25 @@ def build_parser() -> argparse.ArgumentParser:
         "--explain", action="store_true",
         help="also print the query plan and index counters to stderr",
     )
+
+    p_lineage = sub.add_parser(
+        "export-lineage",
+        help="export per-event trigger-operation lineage by joining a sealed "
+             "enrichment database with async browser telemetry (read-only)",
+    )
+    p_lineage.add_argument(
+        "--enrich-db", required=True,
+        help="sealed enrichment SQLite database (opened immutable)",
+    )
+    p_lineage.add_argument(
+        "--telemetry", required=True,
+        help="unordered JSONL of action/work/error telemetry records",
+    )
+    p_lineage.add_argument(
+        "--out", required=True,
+        help="JSONL output path; replaced atomically only after the whole "
+             "input has validated",
+    )
     return parser
 
 
@@ -225,6 +247,14 @@ def _run_reverse(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "export-lineage":
+        try:
+            report = export_lineage(args.enrich_db, args.telemetry, args.out)
+        except SmPipeError as exc:
+            print(f"{exc.reason}: {exc}", file=sys.stderr)
+            return 2
+        _print(report)
+        return 0
     if args.command in ("import-facts", "export-facts", "facts-metrics"):
         try:
             return _run_facts(args)

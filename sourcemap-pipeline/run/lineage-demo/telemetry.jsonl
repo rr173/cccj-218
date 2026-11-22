@@ -1,0 +1,24 @@
+{"type": "action", "run_id": "rA", "node_id": "act-a"}
+{"type": "work", "run_id": "rA", "node_id": "b1", "parents": ["act-a"]}
+{"type": "work", "run_id": "rA", "node_id": "b2", "parents": ["act-a"]}
+{"type": "work", "run_id": "rA", "node_id": "err-1", "parents": ["b1", "b2"]}
+{"type": "error", "event_id": "evt-conv", "run_id": "rA", "node_id": "err-1"}
+{"type": "action", "run_id": "rB", "node_id": "act-aa"}
+{"type": "action", "run_id": "rB", "node_id": "act-ab"}
+{"type": "action", "run_id": "rB", "node_id": "act-zz"}
+{"type": "work", "run_id": "rB", "node_id": "hub", "parents": ["act-aa", "act-ab"]}
+{"type": "work", "run_id": "rB", "node_id": "err-2", "parents": ["hub", "act-zz"]}
+{"type": "error", "event_id": "evt-rank", "run_id": "rB", "node_id": "err-2"}
+{"type": "action", "run_id": "rC", "node_id": "act-exit"}
+{"type": "work", "run_id": "rC", "node_id": "cy1", "parents": ["cy2"]}
+{"type": "work", "run_id": "rC", "node_id": "cy2", "parents": ["cy1", "act-exit"]}
+{"type": "work", "run_id": "rC", "node_id": "err-3", "parents": ["cy1", "ghost-parent"]}
+{"type": "error", "event_id": "evt-cyc", "run_id": "rC", "node_id": "err-3"}
+{"type": "error", "event_id": "evt-ghost-anchor", "run_id": "rC", "node_id": "no-such-node"}
+{"type": "action", "run_id": "rD", "node_id": "cy1"}
+{"type": "work", "run_id": "rD", "node_id": "rep", "parents": ["cy1"]}
+{"type": "error", "event_id": "evt-other", "run_id": "rD", "node_id": "rep"}
+{"type": "action", "run_id": "rE", "node_id": "act-e"}
+{"type": "work", "run_id": "rE", "node_id": "err-m", "parents": ["act-e"]}
+{"type": "error", "event_id": "evt-multi", "run_id": "rE", "node_id": "err-m"}
+{"type": "error", "event_id": "evt-unmapped-only", "run_id": "rE", "node_id": "err-m"}

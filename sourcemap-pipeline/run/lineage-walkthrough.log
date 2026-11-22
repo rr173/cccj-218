@@ -1,0 +1,57 @@
+== hand-authored scenarios: row-by-row expectations ==
+  ok  rows sorted by event_id: ['evt-conv', 'evt-cyc', 'evt-ghost-anchor', 'evt-multi', 'evt-other', 'evt-quiet', 'evt-rank', 'evt-unmapped-only']
+  ok  one row per universe event: 8
+  ok  multi-frame event appears once: 1
+  ok  converged branches keep one candidate: ['act-a']
+  ok  equal-length paths pick lexicographic branch: ['err-1', 'b1', 'act-a']
+  ok  converged event is attributed: 'attributed'
+  ok  id order beats distance for top two: ['act-aa', 'act-ab']
+  ok  nearby third id is excluded: False
+  ok  ranking event is ambiguous: 'ambiguous'
+  ok  cycle flag survives the exit: True
+  ok  missing-parent flag is not swallowed: True
+  ok  cycle exit still yields the known action: [{'action_id': 'act-exit', 'path': ['err-3', 'cy1', 'cy2', 'act-exit']}]
+  ok  cycle+gap stays unresolved: 'unresolved'
+  ok  same-named node resolves inside its own run: [{'action_id': 'cy1', 'path': ['rep', 'cy1']}]
+  ok  cross-run event is attributed: 'attributed'
+  ok  undefined anchor is unresolved: 'unresolved'
+  ok  undefined anchor counts as a gap: True
+  ok  undefined anchor has no candidates: []
+  ok  unbound event is no_anchor: 'no_anchor'
+  ok  no_anchor identity fields are empty: (None, None)
+  ok  no_anchor flags are false: (False, False)
+  ok  failed-attribution event is still in the universe: 'attributed'
+
+== independent reference cross-check (every row) ==
+  ok  production rows equal from-scratch reference: [{'candidates': [{'action_id': 'act-a', 'path': ['err-1', 'b1', 'act-a']}], 'event_id': 'evt-conv', 'node_id': 'err-1', 'reaches_cycle': False, 'reaches_missing': False, 'run_id': 'rA', 'status': 'attributed'}, {'candidates': [{'action_id': 'act-exit', 'path': ['err-3', 'cy1', 'cy2', 'act-exit']}], 'event_id': 'evt-cyc', 'node_id': 'err-3', 'reaches_cycle': True, 'reaches_missing': True, 'run_id': 'rC', 'status': 'unresolved'}, {'candidates': [], 'event_id': 'evt-ghost-anchor', 'node_id': 'no-such-node', 'reaches_cycle': False, 'reaches_missing': True, 'run_id': 'rC', 'status': 'unresolved'}, {'candidates': [{'action_id': 'act-e', 'path': ['err-m', 'act-e']}], 'event_id': 'evt-multi', 'node_id': 'err-m', 'reaches_cycle': False, 'reaches_missing': False, 'run_id': 'rE', 'status': 'attributed'}, {'candidates': [{'action_id': 'cy1', 'path': ['rep', 'cy1']}], 'event_id': 'evt-other', 'node_id': 'rep', 'reaches_cycle': False, 'reaches_missing': False, 'run_id': 'rD', 'status': 'attributed'}, {'candidates': [], 'event_id': 'evt-quiet', 'node_id': None, 'reaches_cycle': False, 'reaches_missing': False, 'run_id': None, 'status': 'no_anchor'}, {'candidates': [{'action_id': 'act-aa', 'path': ['err-2', 'hub', 'act-aa']}, {'action_id': 'act-ab', 'path': ['err-2', 'hub', 'act-ab']}], 'event_id': 'evt-rank', 'node_id': 'err-2', 'reaches_cycle': False, 'reaches_missing': False, 'run_id': 'rB', 'status': 'ambiguous'}, {'candidates': [{'action_id': 'act-e', 'path': ['err-m', 'act-e']}], 'event_id': 'evt-unmapped-only', 'node_id': 'err-m', 'reaches_cycle': False, 'reaches_missing': False, 'run_id': 'rE', 'status': 'attributed'}]
+
+== determinism: reorder + equivalent re-delivery ==
+  ok  byte-identical output after reorder/resend: '{"candidates": [{"action_id": "act-a", "path": ["err-1", "b1", "act-a"]}], "event_id": "evt-conv", "node_id": "err-1", "reaches_cycle": false, "reaches_missing": false, "run_id": "rA", "status": "attributed"}\n{"candidates": [{"action_id": "act-exit", "path": ["err-3", "cy1", "cy2", "act-exit"]}], "event_id": "evt-cyc", "node_id": "err-3", "reaches_cycle": true, "reaches_missing": true, "run_id": "rC", "status": "unresolved"}\n{"candidates": [], "event_id": "evt-ghost-anchor", "node_id": "no-such-node", "reaches_cycle": false, "reaches_missing": true, "run_id": "rC", "status": "unresolved"}\n{"candidates": [{"action_id": "act-e", "path": ["err-m", "act-e"]}], "event_id": "evt-multi", "node_id": "err-m", "reaches_cycle": false, "reaches_missing": false, "run_id": "rE", "status": "attributed"}\n{"candidates": [{"action_id": "cy1", "path": ["rep", "cy1"]}], "event_id": "evt-other", "node_id": "rep", "reaches_cycle": false, "reaches_missing": false, "run_id": "rD", "status": "attributed"}\n{"candidates": [], "event_id": "evt-quiet", "node_id": null, "reaches_cycle": false, "reaches_missing": false, "run_id": null, "status": "no_anchor"}\n{"candidates": [{"action_id": "act-aa", "path": ["err-2", "hub", "act-aa"]}, {"action_id": "act-ab", "path": ["err-2", "hub", "act-ab"]}], "event_id": "evt-rank", "node_id": "err-2", "reaches_cycle": false, "reaches_missing": false, "run_id": "rB", "status": "ambiguous"}\n{"candidates": [{"action_id": "act-e", "path": ["err-m", "act-e"]}], "event_id": "evt-unmapped-only", "node_id": "err-m", "reaches_cycle": false, "reaches_missing": false, "run_id": "rE", "status": "attributed"}\n'
+
+== atomicity: conflicting tail line keeps the old export ==
+  ok  conflicting export exits non-zero: 2
+  ok  reason is lineage_input_conflict: True
+  ok  previous export preserved byte-for-byte: '{"candidates": [{"action_id": "act-a", "path": ["err-1", "b1", "act-a"]}], "event_id": "evt-conv", "node_id": "err-1", "reaches_cycle": false, "reaches_missing": false, "run_id": "rA", "status": "attributed"}\n{"candidates": [{"action_id": "act-exit", "path": ["err-3", "cy1", "cy2", "act-exit"]}], "event_id": "evt-cyc", "node_id": "err-3", "reaches_cycle": true, "reaches_missing": true, "run_id": "rC", "status": "unresolved"}\n{"candidates": [], "event_id": "evt-ghost-anchor", "node_id": "no-such-node", "reaches_cycle": false, "reaches_missing": true, "run_id": "rC", "status": "unresolved"}\n{"candidates": [{"action_id": "act-e", "path": ["err-m", "act-e"]}], "event_id": "evt-multi", "node_id": "err-m", "reaches_cycle": false, "reaches_missing": false, "run_id": "rE", "status": "attributed"}\n{"candidates": [{"action_id": "cy1", "path": ["rep", "cy1"]}], "event_id": "evt-other", "node_id": "rep", "reaches_cycle": false, "reaches_missing": false, "run_id": "rD", "status": "attributed"}\n{"candidates": [], "event_id": "evt-quiet", "node_id": null, "reaches_cycle": false, "reaches_missing": false, "run_id": null, "status": "no_anchor"}\n{"candidates": [{"action_id": "act-aa", "path": ["err-2", "hub", "act-aa"]}, {"action_id": "act-ab", "path": ["err-2", "hub", "act-ab"]}], "event_id": "evt-rank", "node_id": "err-2", "reaches_cycle": false, "reaches_missing": false, "run_id": "rB", "status": "ambiguous"}\n{"candidates": [{"action_id": "act-e", "path": ["err-m", "act-e"]}], "event_id": "evt-unmapped-only", "node_id": "err-m", "reaches_cycle": false, "reaches_missing": false, "run_id": "rE", "status": "attributed"}\n'
+  ok  unknown event_id exits non-zero: 2
+  ok  export still preserved: '{"candidates": [{"action_id": "act-a", "path": ["err-1", "b1", "act-a"]}], "event_id": "evt-conv", "node_id": "err-1", "reaches_cycle": false, "reaches_missing": false, "run_id": "rA", "status": "attributed"}\n{"candidates": [{"action_id": "act-exit", "path": ["err-3", "cy1", "cy2", "act-exit"]}], "event_id": "evt-cyc", "node_id": "err-3", "reaches_cycle": true, "reaches_missing": true, "run_id": "rC", "status": "unresolved"}\n{"candidates": [], "event_id": "evt-ghost-anchor", "node_id": "no-such-node", "reaches_cycle": false, "reaches_missing": true, "run_id": "rC", "status": "unresolved"}\n{"candidates": [{"action_id": "act-e", "path": ["err-m", "act-e"]}], "event_id": "evt-multi", "node_id": "err-m", "reaches_cycle": false, "reaches_missing": false, "run_id": "rE", "status": "attributed"}\n{"candidates": [{"action_id": "cy1", "path": ["rep", "cy1"]}], "event_id": "evt-other", "node_id": "rep", "reaches_cycle": false, "reaches_missing": false, "run_id": "rD", "status": "attributed"}\n{"candidates": [], "event_id": "evt-quiet", "node_id": null, "reaches_cycle": false, "reaches_missing": false, "run_id": null, "status": "no_anchor"}\n{"candidates": [{"action_id": "act-aa", "path": ["err-2", "hub", "act-aa"]}, {"action_id": "act-ab", "path": ["err-2", "hub", "act-ab"]}], "event_id": "evt-rank", "node_id": "err-2", "reaches_cycle": false, "reaches_missing": false, "run_id": "rB", "status": "ambiguous"}\n{"candidates": [{"action_id": "act-e", "path": ["err-m", "act-e"]}], "event_id": "evt-unmapped-only", "node_id": "err-m", "reaches_cycle": false, "reaches_missing": false, "run_id": "rE", "status": "attributed"}\n'
+
+== read-only guarantee: enrich database untouched ==
+  ok  no WAL sidecar created: False
+
+== shared-upstream reuse: graph work vs error count ==
+  ok  graph counter 'nodes_defined' flat as errors grow: 10
+  ok  graph counter 'parent_edges_stored' flat as errors grow: 9
+  ok  graph counter 'cyclic_components' flat as errors grow: 0
+  ok  graph counter 'path_bfs_runs' flat as errors grow: 1
+  ok  one BFS table for one shared anchor: 1
+  ok  repeated candidate paths served from the anchor table: True
+  ok  row count grows with error count only: 380
+
+All walkthrough checks passed. Artifacts:
+  /workspace/sourcemap-pipeline/run/lineage-demo/lineage-shuffled.jsonl
+  /workspace/sourcemap-pipeline/run/lineage-demo/lineage.jsonl
+  /workspace/sourcemap-pipeline/run/lineage-demo/sealed-enrich.db
+  /workspace/sourcemap-pipeline/run/lineage-demo/telemetry-bad.jsonl
+  /workspace/sourcemap-pipeline/run/lineage-demo/telemetry-shuffled.jsonl
+  /workspace/sourcemap-pipeline/run/lineage-demo/telemetry-unknown.jsonl
+  /workspace/sourcemap-pipeline/run/lineage-demo/telemetry.jsonl

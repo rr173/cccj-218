@@ -24,18 +24,22 @@ src/smpipe/
   pipeline.py    ingest-build / enrich / explain / groups 主逻辑
   facts.py       曝光首错事实表：批次台账、局部增量维护、只读归源绑定
   reverse.py     源码区间反查索引：建索引 / 查索引（可重开、自包含）
+  lineage.py     触发操作血缘：只读归源库 + 异步遥测的离线逐事件导出
   cli.py         命令行入口
 tools/
   generate_fixtures.py   手写两层 map 等全部演练资料生成器
   stress_test.py         百万段 map + 五万重复帧压力测试与访问量记录
   facts_walkthrough.py   曝光首错事实表端到端复跑演练（含参考实现对拍）
   reverse_walkthrough.py 反查索引端到端复跑演练（含按字符枚举对拍）
+  lineage_walkthrough.py 触发操作血缘导出端到端复跑演练（含独立参考实现对拍）
 tests/
   reference_decoder.py  独立风格的第二份 VLQ 解码器（仅测试交叉核对）
   reference_facts.py    只保留最终输入、每次从零重算的事实表参考实现
+  reference_lineage.py  朴素 DFS/BFS 从零重算的血缘参考实现（不共享图代码）
   test_pipeline.py      42 条实际断言
   test_facts.py         曝光首错事实表行为/增量/对拍/局部性断言
   test_reverse.py       反查索引行为/区间合并/循环差异/重开断言
+  test_lineage.py       血缘 SCC/封顶传播/路径/冲突/原子性/复用/对拍断言
   run_tests.py          python -I 隔离模式测试入口
 ```
 
@@ -261,6 +265,80 @@ python3 -I smpipe.py query-reverse-index --index ./run/reverse.idx \
 
 ```bash
 python3 -I tools/reverse_walkthrough.py --out ./run/reverse-demo
+```
+
+生成的数据只落在 `run/` 下，不入库到 Git。
+
+## 触发操作血缘（`export-lineage`）
+
+一次点击可能启动多项异步工作，若干工作汇合后才上报一条错误。归源帧只能
+指出哪段代码报错，回答不了「这条错误是从哪次页面操作一路传下来的」。本
+命令把**封盘的 `enrich` 归源库**与同批浏览器异步遥测接起来，离线导出一张
+逐事件的触发操作血缘表。血缘只描述观察到的触发链，**不诊断代码错误**；
+不读 Source Map、不读曝光事实表、不读反查索引，归源库以 `immutable=1`
+只读打开，仅取 `frames` 里已有结果帧的 `event_id` 作为事件全集（一个事件
+多帧只算一行，帧未能归源不影响纳入）。
+
+### 遥测格式（无序 JSONL，每行一条）
+
+```json
+{"type": "action", "run_id": "r1", "node_id": "click-save"}
+{"type": "work", "run_id": "r1", "node_id": "job-2",
+ "parents": ["click-save", "job-1"]}
+{"type": "error", "event_id": "E7", "run_id": "r1", "node_id": "job-2"}
+```
+
+* 节点完整身份是 `(run_id, node_id)`；父边只在同一次运行内解析，**绝不从
+  另一运行借同名节点**；
+* `parents` 是非空数组、按集合理解：次序无关、重复折叠，等价重送幂等；
+* 输入冲突（拒绝整份遥测、不替换输出）：同一节点出现不同定义（含类型
+  冲突）、同一事件绑定到不同节点、`error` 指向事件全集之外的 `event_id`；
+* 采样缺口（不拒绝，落到行上的缺陷标记）：父节点或上报节点没有定义记录。
+
+### 输出行语义（JSONL，按 `event_id` 字符串升序）
+
+每行含 `event_id`、上报节点的 `run_id`/`node_id`（未绑定为 `null`）、
+`reaches_missing`（能否沿父边到达缺失节点）、`reaches_cycle`（能否到达
+有向环；环另有出口也照样标记并继续收集可达操作）、`status` 与
+`candidates`：可达操作中按 ID 字符串升序的**前两个不同操作**，每个附从
+上报节点到该操作、两端都包含的节点 ID 序列（边数最少；同长度取字典序
+最小的一条）。同一操作经多个分支到达只算一次。
+
+状态：`no_anchor`（没有 error 记录绑定）；`ambiguous`（已绑定且至少两个
+不同候选操作）；`attributed`（恰好一个候选且无缺口、无环）；其余已绑定
+事件为 `unresolved`。
+
+### 工作量与原子性
+
+* 一次导出可覆盖大量彼此独立的运行：解析后的遥测、事件全集与结果全部
+  暂存在临时 SQLite（退出即删），内存中一次只保留一个运行的图；
+* 同一运行里大量错误共享同一片上游关系时，逐节点血缘只算一次：迭代
+  Tarjan SCC（O(V+E)）定位有向环，再在缩点 DAG 上按逆拓扑传播，每个节点
+  的可达操作集合始终封顶为两个最小 ID——节点及边的处理量随图大小增长，
+  不随错误数、可达操作总数或路径组合数成倍增长；复查路径按不同上报节点
+  记忆化 BFS 复用；
+* 整份输入检查与全部运行分析成功后才经同目录临时文件 + 原子替换写目标，
+  尾部坏记录保留原有导出。
+
+```bash
+# 归源库需先封盘（checkpoint 掉 WAL），随后视为只读
+python3 -I -c "import sqlite3;c=sqlite3.connect('./run/store.db');\
+c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()"
+
+python3 -I smpipe.py export-lineage \
+  --enrich-db ./run/store.db \
+  --telemetry ./path/async-telemetry.jsonl \
+  --out ./run/lineage.jsonl
+```
+
+一键可复跑演练（迷你封盘归源库 + 手写遥测：双分支汇合仍为单一候选、
+等长路径稳定选定、更近但 ID 排第三的操作不挤占前两名、带出口的环与
+缺失父节点并存、另一运行同名节点隔离、无绑定/多帧/尾行冲突/重排重送、
+逐行与朴素 DFS/BFS 独立参考实现对拍；另用运行时生成的共享上游扇入
+证明图处理计数器不随错误数增长）：
+
+```bash
+python3 -I tools/lineage_walkthrough.py --out ./run/lineage-demo
 ```
 
 生成的数据只落在 `run/` 下，不入库到 Git。

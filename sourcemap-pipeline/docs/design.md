@@ -173,3 +173,67 @@ artifact。富化时对 `(artifact_id, map_digest)` 签名做 visited 检测，�
 `EXPLAIN QUERY PLAN` 展示窄查询的 `SEARCH ... USING INDEX
 idx_hits_source` 访问形态。
 
+## 10. 触发操作血缘（离线逐事件导出，不在线维护）
+
+归源帧回答「哪段代码报错」；血缘回答另一个运维问题：这条错误是从哪次
+实际用户操作，经哪些异步工作一路传下来的。它只描述**观察到的触发链**，
+不诊断代码错误，因此既不读 Source Map、也不读曝光事实表与反查索引。
+
+### 10.1 两个输入、只读边界与磁盘暂存
+
+* **封盘归源库（sealed）**：沿用 `immutable=1` 只读连接与非空 `-wal`
+  拒绝规则；只对 `frames` 做一次 `SELECT DISTINCT event_id WHERE
+  result_json IS NOT NULL` 取事件全集，多帧事件天然一行，帧状态
+  （含归源失败）不影响纳入。归源库字节在导出前后不变、无 WAL 侧车。
+* **无序遥测 JSONL**：`action` / `work` / `error` 三类记录。节点身份是
+  `(run_id, node_id)`，父边只在同运行解析；`parents` 按集合归一化
+  （去重 + 排序后存规范签名），因此输入行序、父列表次序与等价重送都不
+  改变结果。
+* 一次导出可能覆盖大量彼此独立的运行。解析后的节点、父边、事件绑定、
+  事件全集与结果全部写入临时目录里的暂存 SQLite（`WITHOUT ROWID` 主键
+  表），进程退出即删；内存中任一时刻只装一个运行的图，不把所有运行的
+  关系与所有事件路径同时留在内存。
+
+### 10.2 冲突拒绝与采样缺口的分界
+
+* **输入冲突**（`lineage_input_conflict`，拒绝整份遥测）：同 `(run,node)`
+  出现 `action`/`work` 类型冲突、同一 work 节点两份不同父集合、同一
+  `event_id` 绑定到两个不同 `(run,node)`、或 error 的 `event_id` 不在
+  归源帧事件全集内。结构非法（字段类型、空 ID、空 `parents`、未知字段、
+  坏 JSON）报 `invalid_telemetry` 并带行号。
+* **采样缺口**（不拒绝）：父 ID 或上报节点在本运行无定义记录。缺口只
+  影响从该节点出发的可达性标记；绑定到未定义上报节点的事件是
+  `unresolved` 且 `reaches_missing=true`，而不是冲突。
+* 所有校验在写出前完成；输出先走同目录临时文件，成功后 `os.replace`
+  原子替换，尾部坏记录保留原有导出。
+
+### 10.3 O(V+E) 的共享血缘计算
+
+一个运行里大量 error 常共享同一片上游关系，因此逐节点血缘只计算一次，
+与 error 数量无关：
+
+1. 迭代式 Tarjan（显式栈，不受递归深度限制）在排序节点与排序邻接上求
+   强连通分量：多节点分量与自环都判为有向环；分量按汇点优先（缩点 DAG
+   的逆拓扑）顺序产出。
+2. 在缩点 DAG 上按该顺序传播三个量：可达缺失标记、可达环标记、可达
+   action 集合。action 集合在每个节点上**始终封顶为 ID 最小的两个**
+   （`merge_top_actions` 只做小集合归并），所以传播代价与可达操作总数、
+   路径组合数无关；环分量即使另有出口也标环，出口后的 action 照常
+   收集。
+3. 复查路径只为最终入选的候选重建：每个不同上报节点至多跑一次 BFS，
+   邻接有序保证同距离按节点 ID 序列字典序稳定选定，结果按节点记忆化，
+   共享同一上报点的多个 error 复用同一张路径表。计数器
+   `path_bfs_runs` / `path_lookups` / `path_cache_hits` 是复用证据；
+   演练中 20 与 400 个共享上报点的错误相比，`nodes_defined`、
+   `parent_edges_stored`、`path_bfs_runs` 完全持平。
+
+### 10.4 行状态与稳定输出
+
+每行字段固定为 `event_id`、`run_id`、`node_id`（未绑定为 `null`）、
+`reaches_missing`、`reaches_cycle`、`status`、`candidates`（每项含
+`action_id` 与两端包含的 `path` 节点序列），按 `event_id` 字符串升序、
+键名排序写出。状态机：未绑定 → `no_anchor`；已绑定且候选 ≥2 →
+`ambiguous`；恰一个候选且无缺口无环 → `attributed`；其余已绑定 →
+`unresolved`。测试侧另有不共享任何图代码的朴素 DFS/染色/BFS 参考实现
+（`tests/reference_lineage.py`），在 120 组随机图与完整导出上逐值对拍。
+

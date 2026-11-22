@@ -8,7 +8,7 @@
 == [3/6] build-reverse-index from the sealed database ==
   build report:
     build_db_sha256: 9db0c8abb380ab34a565a95fafb35cf51f1fa5bc9f342bacb2eca47d2a9d4477
-    build_seconds: 0.508
+    build_seconds: 0.5
     entries_skipped_invalid_map: 0
     entries_skipped_no_body: 0
     entries_skipped_no_map: 0
